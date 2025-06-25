@@ -26,3 +26,21 @@ class HomeView extends StatelessWidget {
         ],
       ),
       body: viewModel.gastos.isEmpty
+          ? const Center(child: Text('Nenhum gasto cadastrado'))
+          : ListView.builder(
+              itemCount: viewModel.gastos.length,
+              itemBuilder: (context, index) {
+                final gasto = viewModel.gastos[index];
+                return GastoCard(
+                  gasto: gasto,
+                  onDelete: () => viewModel.removerGasto(index),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.newEntry),
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}

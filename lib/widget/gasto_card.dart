@@ -30,4 +30,15 @@ class GastoCard extends StatelessWidget {
           children: [
             Text(
               formatter.format(gasto.valor),
-              style: const TextStyle(fontWeight: FontWe
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: onDelete,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

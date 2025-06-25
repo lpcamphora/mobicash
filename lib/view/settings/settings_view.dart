@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
 import '../../model/gasto_model.dart';
 import '../../viewmodel/gasto_viewmodel.dart';
-import 'package:provider/provider.dart';
 
 class SettingsView extends StatelessWidget {
   const SettingsView({super.key});
@@ -22,13 +22,23 @@ class SettingsView extends StatelessWidget {
             onPressed: () {
               final box = Hive.box<GastoModel>('gastos');
               box.clear();
+
+              // Atualiza a UI com os dados zerados
               Provider.of<GastoViewModel>(context, listen: false).carregarGastos();
-              Navigator.pop(context);
+
+              Navigator.pop(context); // Fecha o diálogo
+
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Todos os dados foram apagados')),
+                const SnackBar(
+                  content: Text('Todos os dados foram apagados'),
+                  backgroundColor: Colors.red,
+                ),
               );
             },
-            child: const Text('Apagar', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Apagar',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -44,14 +54,14 @@ class SettingsView extends StatelessWidget {
       body: ListView(
         children: [
           const ListTile(
+            leading: Icon(Icons.info),
             title: Text('Sobre o App'),
             subtitle: Text('MobiCash v1.0.0\nControle financeiro pessoal'),
-            leading: Icon(Icons.info),
           ),
           ListTile(
+            leading: const Icon(Icons.delete_forever, color: Colors.red),
             title: const Text('Apagar todos os dados'),
             subtitle: const Text('Remove todos os gastos do app'),
-            leading: const Icon(Icons.delete_forever, color: Colors.red),
             onTap: () => _confirmarReset(context),
           ),
         ],

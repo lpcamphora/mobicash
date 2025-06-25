@@ -47,4 +47,85 @@ class _NewEntryViewState extends State<NewEntryView> {
 
   void _salvar() {
     if (_formKey.currentState!.validate() &&
-        _categoriaSelecionada != nul_
+        _categoriaSelecionada != null &&
+        _cartaoSelecionado != null) {
+      final gasto = GastoModel(
+        descricao: _descricaoController.text,
+        valor: double.parse(_valorController.text),
+        data: _dataSelecionada,
+        categoria: _categoriaSelecionada!,
+        cartao: _cartaoSelecionado!,
+      );
+
+      Provider.of<GastoViewModel>(context, listen: false).adicionarGasto(gasto);
+      Navigator.pop(context);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final formatter = DateFormat('dd/MM/yyyy');
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Novo Gasto')),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            children: [
+              TextFormField(
+                controller: _descricaoController,
+                decoration: const InputDecoration(labelText: 'Descrição'),
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Informe a descrição' : null,
+              ),
+              TextFormField(
+                controller: _valorController,
+                decoration: const InputDecoration(labelText: 'Valor (R\$)'),
+                keyboardType: TextInputType.number,
+                validator: (value) =>
+                    value == null || value.isEmpty ? 'Informe o valor' : null,
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Categoria'),
+                value: _categoriaSelecionada,
+                items: _categorias
+                    .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
+                    .toList(),
+                onChanged: (value) => setState(() => _categoriaSelecionada = value),
+                validator: (value) => value == null ? 'Escolha uma categoria' : null,
+              ),
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: 'Cartão'),
+                value: _cartaoSelecionado,
+                items: _cartoes
+                    .map((c) => DropdownMenuItem(value: c, child: Text(c)))
+                    .toList(),
+                onChanged: (value) => setState(() => _cartaoSelecionado = value),
+                validator: (value) => value == null ? 'Escolha um cartão' : null,
+              ),
+              const SizedBox(height: 16),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Data'),
+                subtitle: Text(formatter.format(_dataSelecionada)),
+                trailing: IconButton(
+                  icon: const Icon(Icons.calendar_today),
+                  onPressed: _selecionarData,
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.save),
+                label: const Text('Salvar Gasto'),
+                onPressed: _salvar,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
