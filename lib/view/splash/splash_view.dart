@@ -13,7 +13,7 @@ class _SplashViewState extends State<SplashView> {
   void initState() {
     super.initState();
 
-    // Aguarda 2 segundos e navega para a Home
+    // Redireciona após 2 segundos
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     });
@@ -22,16 +22,16 @@ class _SplashViewState extends State<SplashView> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.deepPurple,
+      backgroundColor: Colors.white,
       body: Center(
-        child: Text(
-          'MobiCash',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image(
+              image: AssetImage('assets/logo.png'),
+              width: 160,
+            ),
+          ],
         ),
       ),
     );

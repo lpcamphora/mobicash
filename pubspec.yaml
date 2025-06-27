@@ -15,9 +15,19 @@ dependencies:
   intl: ^0.18.1
   fl_chart: ^1.0.0
 
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
   hive_generator: ^2.0.1
   build_runner: ^2.4.6
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  assets:
+    - assets/iconApp.png
+    - assets/logo.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/iconApp.png
