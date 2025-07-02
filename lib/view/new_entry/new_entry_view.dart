@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../model/gasto_model.dart';
-import '../../viewmodel/gasto_viewmodel.dart';
-import '../../routes/app_routes.dart';
+import '../../viewmodel/gasto_viewmodel.dart' show GastoViewModel;
+
+
 
 class NewEntryView extends StatefulWidget {
   const NewEntryView({super.key});
@@ -20,6 +21,7 @@ class _NewEntryViewState extends State<NewEntryView> {
   String? _categoriaSelecionada;
   String? _cartaoSelecionado;
   DateTime _dataSelecionada = DateTime.now();
+  TipoLancamento? _tipoSelecionado;
 
   final List<String> _categorias = ['Alimentação', 'Transporte', 'Lazer', 'Saúde'];
   final List<String> _cartoes = ['Débito Itaú', 'Crédito Nubank', 'Pix', 'Dinheiro'];
@@ -38,7 +40,7 @@ class _NewEntryViewState extends State<NewEntryView> {
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
     );
-    if (dataEscolhida != null && dataEscolhida != _dataSelecionada) {
+    if (dataEscolhida != null) {
       setState(() {
         _dataSelecionada = dataEscolhida;
       });
@@ -48,13 +50,15 @@ class _NewEntryViewState extends State<NewEntryView> {
   void _salvar() {
     if (_formKey.currentState!.validate() &&
         _categoriaSelecionada != null &&
-        _cartaoSelecionado != null) {
+        _cartaoSelecionado != null &&
+        _tipoSelecionado != null) {
       final gasto = GastoModel(
         descricao: _descricaoController.text,
         valor: double.parse(_valorController.text),
         data: _dataSelecionada,
         categoria: _categoriaSelecionada!,
         cartao: _cartaoSelecionado!,
+        tipo: _tipoSelecionado!,
       );
 
       Provider.of<GastoViewModel>(context, listen: false).adicionarGasto(gasto);
@@ -67,13 +71,27 @@ class _NewEntryViewState extends State<NewEntryView> {
     final formatter = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Novo Gasto')),
+      appBar: AppBar(title: const Text('Novo Lançamento')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
+              DropdownButtonFormField<TipoLancamento>(
+                decoration: const InputDecoration(labelText: 'Tipo'),
+                value: _tipoSelecionado,
+                items: TipoLancamento.values.map((tipo) {
+                  return DropdownMenuItem(
+                    value: tipo,
+                    child: Text(
+                      tipo == TipoLancamento.receita ? 'Receita' : 'Despesa',
+                    ),
+                  );
+                }).toList(),
+                onChanged: (tipo) => setState(() => _tipoSelecionado = tipo),
+                validator: (value) => value == null ? 'Escolha o tipo' : null,
+              ),
               TextFormField(
                 controller: _descricaoController,
                 decoration: const InputDecoration(labelText: 'Descrição'),
@@ -119,7 +137,7 @@ class _NewEntryViewState extends State<NewEntryView> {
               const SizedBox(height: 24),
               ElevatedButton.icon(
                 icon: const Icon(Icons.save),
-                label: const Text('Salvar Gasto'),
+                label: const Text('Salvar Lançamento'),
                 onPressed: _salvar,
               ),
             ],
