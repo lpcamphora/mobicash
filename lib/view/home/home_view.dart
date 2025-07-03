@@ -1,121 +1,200 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import '../../viewmodel/gasto_viewmodel.dart';
-import '../../widget/gasto_card.dart';
+import '../../model/gasto_model.dart';
+import '../../viewmodel/gasto_viewmodel.dart' show GastoViewModel;
 import '../../routes/app_routes.dart';
 
-class HomeView extends StatelessWidget {
+
+class HomeView extends StatefulWidget {
   const HomeView({super.key});
+
+  @override
+  State<HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<HomeView> {
+  bool isMenuOpen = false;
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GastoViewModel>(context);
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
+    final receitas = viewModel.gastos
+        .where((g) => g.tipo == TipoLancamento.receita)
+        .toList();
+    final despesas = viewModel.gastos
+        .where((g) => g.tipo == TipoLancamento.despesa)
+        .toList();
+
+    final totalReceitas =
+        receitas.fold(0.0, (sum, g) => sum + g.valor);
+    final totalDespesas =
+        despesas.fold(0.0, (sum, g) => sum + g.valor);
+    final saldo = totalReceitas - totalDespesas;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: null,
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          const SizedBox(height: 16),
-          // Cabeçalho do mês com setas
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: const [
-              Icon(Icons.chevron_left, color: Colors.black),
-              SizedBox(width: 8),
-              Text(
-                'Junho',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Cabeçalho do mês com setas
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.chevron_left, color: Colors.black),
+                SizedBox(width: 8),
+                Text(
+                  'Junho',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
                 ),
-              ),
-              SizedBox(width: 8),
-              Icon(Icons.chevron_right, color: Colors.black),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Totais
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              children: [
-                _buildResumoLinha(
-                  label: 'Total Receita',
-                  valor: formatter.format(viewModel.totalReceitas),
-                  onAdd: () => Navigator.pushNamed(context, AppRoutes.newEntry),
-                ),
-                _buildResumoLinha(
-                  label: 'Total Despesas',
-                  valor: formatter.format(viewModel.totalDespesas),
-                  onAdd: () => Navigator.pushNamed(context, AppRoutes.newEntry),
-                ),
-                _buildResumoLinha(
-                  label: 'Saldo',
-                  valor: formatter.format(viewModel.saldo),
-                  onAdd: null,
-                ),
+                SizedBox(width: 8),
+                Icon(Icons.chevron_right, color: Colors.black),
               ],
             ),
-          ),
-          const SizedBox(height: 24),
-          const Divider(),
-          // Lista de gastos
-          Expanded(
-            child: viewModel.gastos.isEmpty
-                ? const Center(child: Text('Nenhum gasto cadastrado'))
-                : ListView.builder(
-                    itemCount: viewModel.gastos.length,
-                    itemBuilder: (context, index) {
-                      final gasto = viewModel.gastos[index];
-                      return GastoCard(
-                        gasto: gasto,
-                        onDelete: () => viewModel.removerGasto(index),
-                      );
-                    },
-                  ),
-          ),
-        ],
+            const SizedBox(height: 32),
+
+            // Totais com lista
+            _buildResumoComLista(
+              label: 'Total Receita',
+              valor: formatter.format(totalReceitas),
+              gastos: receitas,
+              formatter: formatter,
+            ),
+            const SizedBox(height: 24),
+            _buildResumoComLista(
+              label: 'Total Despesas',
+              valor: formatter.format(totalDespesas),
+              gastos: despesas,
+              formatter: formatter,
+            ),
+            const SizedBox(height: 24),
+
+            // Saldo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Saldo',
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(formatter.format(saldo),
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+              ],
+            ),
+          ],
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.newEntry),
-        backgroundColor: Colors.grey.shade300,
-        elevation: 2,
-        child: const Icon(Icons.add, color: Colors.black),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 8, bottom: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (isMenuOpen) ...[
+              _menuItem(Icons.add, 'Novo registro', () {
+                Navigator.pushNamed(context, AppRoutes.newEntry);
+              }),
+              const SizedBox(height: 8),
+              _menuItem(Icons.insert_chart, 'Relatórios', () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Abrir relatórios')),
+                );
+              }),
+              const SizedBox(height: 8),
+              _menuItem(Icons.settings, 'Configurações', () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Abrir configurações')),
+                );
+              }),
+              const SizedBox(height: 16),
+            ],
+            FloatingActionButton(
+              onPressed: () {
+                setState(() {
+                  isMenuOpen = !isMenuOpen;
+                });
+              },
+              backgroundColor: Colors.grey.shade300,
+              child: Icon(
+                isMenuOpen ? Icons.close : Icons.add,
+                color: Colors.black,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  static Widget _buildResumoLinha({
+  Widget _buildResumoComLista({
     required String label,
     required String valor,
-    VoidCallback? onAdd,
+    required List gastos,
+    required NumberFormat formatter,
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Título e valor
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label,
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 16)),
+            Row(
+              children: [
+                Text(valor,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(width: 8),
+                const Icon(Icons.remove_circle_outline, size: 18),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        // Lista de lançamentos
+        ...gastos.map<Widget>((g) {
+          return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(valor, style: const TextStyle(fontWeight: FontWeight.bold)),
-              if (onAdd != null)
-                IconButton(
-                  icon: const Icon(Icons.add, size: 16),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: onAdd,
-                  color: Colors.grey.shade600,
-                ),
+              Text(g.descricao),
+              Text(formatter.format(g.valor)),
             ],
-          ),
-        ],
-      ),
+          );
+        }).toList(),
+      ],
+    );
+  }
+
+  Widget _menuItem(IconData icon, String label, VoidCallback onPressed) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          color: Colors.grey.shade300,
+          child: Text(label),
+        ),
+        const SizedBox(width: 8),
+        FloatingActionButton(
+          heroTag: label,
+          mini: true,
+          backgroundColor: Colors.black,
+          onPressed: onPressed,
+          child: Icon(icon, size: 18, color: Colors.white),
+        ),
+      ],
     );
   }
 }

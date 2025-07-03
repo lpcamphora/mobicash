@@ -4,8 +4,6 @@ import 'package:intl/intl.dart';
 import '../../model/gasto_model.dart';
 import '../../viewmodel/gasto_viewmodel.dart' show GastoViewModel;
 
-
-
 class NewEntryView extends StatefulWidget {
   const NewEntryView({super.key});
 
@@ -21,7 +19,7 @@ class _NewEntryViewState extends State<NewEntryView> {
   String? _categoriaSelecionada;
   String? _cartaoSelecionado;
   DateTime _dataSelecionada = DateTime.now();
-  TipoLancamento? _tipoSelecionado;
+  TipoLancamento _tipoSelecionado = TipoLancamento.despesa;
 
   final List<String> _categorias = ['Alimentação', 'Transporte', 'Lazer', 'Saúde'];
   final List<String> _cartoes = ['Débito Itaú', 'Crédito Nubank', 'Pix', 'Dinheiro'];
@@ -50,15 +48,14 @@ class _NewEntryViewState extends State<NewEntryView> {
   void _salvar() {
     if (_formKey.currentState!.validate() &&
         _categoriaSelecionada != null &&
-        _cartaoSelecionado != null &&
-        _tipoSelecionado != null) {
+        _cartaoSelecionado != null) {
       final gasto = GastoModel(
         descricao: _descricaoController.text,
         valor: double.parse(_valorController.text),
         data: _dataSelecionada,
         categoria: _categoriaSelecionada!,
         cartao: _cartaoSelecionado!,
-        tipo: _tipoSelecionado!,
+        tipo: _tipoSelecionado,
       );
 
       Provider.of<GastoViewModel>(context, listen: false).adicionarGasto(gasto);
@@ -71,43 +68,72 @@ class _NewEntryViewState extends State<NewEntryView> {
     final formatter = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Novo Lançamento')),
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Novo Registro',
+          style: TextStyle(color: Colors.black),
+        ),
+        centerTitle: false,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
           child: ListView(
             children: [
-              DropdownButtonFormField<TipoLancamento>(
-                decoration: const InputDecoration(labelText: 'Tipo'),
-                value: _tipoSelecionado,
-                items: TipoLancamento.values.map((tipo) {
-                  return DropdownMenuItem(
-                    value: tipo,
-                    child: Text(
-                      tipo == TipoLancamento.receita ? 'Receita' : 'Despesa',
-                    ),
-                  );
-                }).toList(),
-                onChanged: (tipo) => setState(() => _tipoSelecionado = tipo),
-                validator: (value) => value == null ? 'Escolha o tipo' : null,
+              // Botões de tipo: Despesas | Receitas
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ChoiceChip(
+                    label: const Text('Despesas'),
+                    selected: _tipoSelecionado == TipoLancamento.despesa,
+                    onSelected: (_) {
+                      setState(() => _tipoSelecionado = TipoLancamento.despesa);
+                    },
+                  ),
+                  ChoiceChip(
+                    label: const Text('Receitas'),
+                    selected: _tipoSelecionado == TipoLancamento.receita,
+                    onSelected: (_) {
+                      setState(() => _tipoSelecionado = TipoLancamento.receita);
+                    },
+                  ),
+                ],
               ),
+              const SizedBox(height: 24),
               TextFormField(
                 controller: _descricaoController,
-                decoration: const InputDecoration(labelText: 'Descrição'),
+                decoration: const InputDecoration(
+                  hintText: 'Descrição',
+                  border: OutlineInputBorder(),
+                ),
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Informe a descrição' : null,
               ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _valorController,
-                decoration: const InputDecoration(labelText: 'Valor (R\$)'),
+                decoration: const InputDecoration(
+                  hintText: 'Valor',
+                  border: OutlineInputBorder(),
+                ),
                 keyboardType: TextInputType.number,
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Informe o valor' : null,
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Categoria'),
+                decoration: const InputDecoration(
+                  hintText: 'Categoria',
+                  border: OutlineInputBorder(),
+                ),
                 value: _categoriaSelecionada,
                 items: _categorias
                     .map((cat) => DropdownMenuItem(value: cat, child: Text(cat)))
@@ -115,8 +141,12 @@ class _NewEntryViewState extends State<NewEntryView> {
                 onChanged: (value) => setState(() => _categoriaSelecionada = value),
                 validator: (value) => value == null ? 'Escolha uma categoria' : null,
               ),
+              const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(labelText: 'Cartão'),
+                decoration: const InputDecoration(
+                  hintText: 'Cartão',
+                  border: OutlineInputBorder(),
+                ),
                 value: _cartaoSelecionado,
                 items: _cartoes
                     .map((c) => DropdownMenuItem(value: c, child: Text(c)))
@@ -135,10 +165,17 @@ class _NewEntryViewState extends State<NewEntryView> {
                 ),
               ),
               const SizedBox(height: 24),
-              ElevatedButton.icon(
-                icon: const Icon(Icons.save),
-                label: const Text('Salvar Lançamento'),
-                onPressed: _salvar,
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: _salvar,
+                  child: const Text('SALVAR'),
+                ),
               ),
             ],
           ),
