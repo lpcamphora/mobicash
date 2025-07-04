@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+
 import 'package:mobicash/database/hive_config.dart';
 import 'package:mobicash/viewmodel/gasto_viewmodel.dart';
+import 'package:mobicash/model/settings_model.dart';
 import 'package:mobicash/routes/app_routes.dart';
 
 import 'package:mobicash/view/splash/splash_view.dart';
@@ -12,7 +15,12 @@ import 'package:mobicash/view/reports/reports_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initHive(); // Inicialização do Hive
+  await Hive.initFlutter();
+
+  // Registro do adapter do SettingsModel
+  Hive.registerAdapter(SettingsModelAdapter());
+
+  await initHive(); // Inicialização de outras boxes do Hive
 
   runApp(const MobiCashApp());
 }
