@@ -5,7 +5,6 @@ import '../../model/gasto_model.dart';
 import '../../viewmodel/gasto_viewmodel.dart' show GastoViewModel;
 import '../../routes/app_routes.dart';
 
-
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
@@ -21,17 +20,17 @@ class _HomeViewState extends State<HomeView> {
     final viewModel = Provider.of<GastoViewModel>(context);
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-    final receitas = viewModel.gastos
-        .where((g) => g.tipo == TipoLancamento.receita)
-        .toList();
-    final despesas = viewModel.gastos
-        .where((g) => g.tipo == TipoLancamento.despesa)
-        .toList();
+    final receitas =
+        viewModel.gastos
+            .where((g) => g.tipo == TipoLancamento.receita)
+            .toList();
+    final despesas =
+        viewModel.gastos
+            .where((g) => g.tipo == TipoLancamento.despesa)
+            .toList();
 
-    final totalReceitas =
-        receitas.fold(0.0, (sum, g) => sum + g.valor);
-    final totalDespesas =
-        despesas.fold(0.0, (sum, g) => sum + g.valor);
+    final totalReceitas = receitas.fold(0.0, (sum, g) => sum + g.valor);
+    final totalDespesas = despesas.fold(0.0, (sum, g) => sum + g.valor);
     final saldo = totalReceitas - totalDespesas;
 
     return Scaffold(
@@ -42,7 +41,6 @@ class _HomeViewState extends State<HomeView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Cabeçalho do mês com setas
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
@@ -62,32 +60,96 @@ class _HomeViewState extends State<HomeView> {
             ),
             const SizedBox(height: 32),
 
-            // Totais com lista
-            _buildResumoComLista(
-              label: 'Total Receita',
-              valor: formatter.format(totalReceitas),
-              gastos: receitas,
-              formatter: formatter,
-            ),
-            const SizedBox(height: 24),
-            _buildResumoComLista(
-              label: 'Total Despesas',
-              valor: formatter.format(totalDespesas),
-              gastos: despesas,
-              formatter: formatter,
+            Container(
+              constraints: const BoxConstraints(maxHeight: 120),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: SingleChildScrollView(
+                child: _buildResumoComLista(
+                  label: 'Total Receita',
+                  valor: formatter.format(totalReceitas),
+                  gastos: receitas,
+                  formatter: formatter,
+                ),
+              ),
             ),
             const SizedBox(height: 24),
 
-            // Saldo
+            Container(
+              constraints: const BoxConstraints(maxHeight: 300),
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Despesas',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            formatter.format(totalDespesas),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.remove_circle_outline, size: 18),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: ListView.builder(
+                      padding: EdgeInsets.zero,
+                      itemCount: despesas.length,
+                      itemBuilder: (context, index) {
+                        final g = despesas[index];
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(g.descricao),
+                            Text(formatter.format(g.valor)),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Saldo',
-                    style:
-                        TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                Text(formatter.format(saldo),
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                const Text(
+                  'Saldo',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(
+                  formatter.format(saldo),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
           ],
@@ -144,18 +206,22 @@ class _HomeViewState extends State<HomeView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Título e valor
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16)),
+            Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
             Row(
               children: [
-                Text(valor,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
+                Text(
+                  valor,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
                 const SizedBox(width: 8),
                 const Icon(Icons.remove_circle_outline, size: 18),
               ],
@@ -163,14 +229,10 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
         const SizedBox(height: 8),
-        // Lista de lançamentos
         ...gastos.map<Widget>((g) {
           return Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(g.descricao),
-              Text(formatter.format(g.valor)),
-            ],
+            children: [Text(g.descricao), Text(formatter.format(g.valor))],
           );
         }).toList(),
       ],
