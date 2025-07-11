@@ -14,6 +14,8 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   bool isMenuOpen = false;
+  bool expandReceitas = false;
+  bool expandDespesas = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +41,6 @@ class _HomeViewState extends State<HomeView> {
       body: Padding(
         padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -60,80 +61,26 @@ class _HomeViewState extends State<HomeView> {
             ),
             const SizedBox(height: 32),
 
-            Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: SingleChildScrollView(
-                child: _buildResumoComLista(
-                  label: 'Total Receita',
-                  valor: formatter.format(totalReceitas),
-                  gastos: receitas,
-                  formatter: formatter,
-                ),
-              ),
+            _buildExpandableBox(
+              title: 'Total Receita',
+              valor: totalReceitas,
+              gastos: receitas,
+              expanded: expandReceitas,
+              onToggle: () => setState(() => expandReceitas = !expandReceitas),
+              formatter: formatter,
+              maxHeight: 200,
             ),
             const SizedBox(height: 24),
 
-            Container(
-              constraints: const BoxConstraints(maxHeight: 300),
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total Despesas',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            formatter.format(totalDespesas),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          const Icon(Icons.remove_circle_outline, size: 18),
-                        ],
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ListView.builder(
-                      padding: EdgeInsets.zero,
-                      itemCount: despesas.length,
-                      itemBuilder: (context, index) {
-                        final g = despesas[index];
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(g.descricao),
-                            Text(formatter.format(g.valor)),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            _buildExpandableBox(
+              title: 'Total Despesas',
+              valor: totalDespesas,
+              gastos: despesas,
+              expanded: expandDespesas,
+              onToggle: () => setState(() => expandDespesas = !expandDespesas),
+              formatter: formatter,
+              maxHeight: 300,
             ),
-
             const SizedBox(height: 24),
 
             Row(
@@ -155,87 +102,120 @@ class _HomeViewState extends State<HomeView> {
           ],
         ),
       ),
-      floatingActionButton: Padding(
-        padding: const EdgeInsets.only(right: 8, bottom: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            if (isMenuOpen) ...[
-              _menuItem(Icons.add, 'Novo registro', () {
-                Navigator.pushNamed(context, AppRoutes.newEntry);
-              }),
-              const SizedBox(height: 8),
-              _menuItem(Icons.insert_chart, 'Relatórios', () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Abrir relatórios')),
-                );
-              }),
-              const SizedBox(height: 8),
-              _menuItem(Icons.settings, 'Configurações', () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Abrir configurações')),
-                );
-              }),
-              const SizedBox(height: 16),
-            ],
-            FloatingActionButton(
-              onPressed: () {
-                setState(() {
-                  isMenuOpen = !isMenuOpen;
-                });
-              },
-              backgroundColor: Colors.grey.shade300,
-              child: Icon(
-                isMenuOpen ? Icons.close : Icons.add,
-                color: Colors.black,
+      floatingActionButton: _buildFABMenu(context),
+    );
+  }
+
+  Widget _buildExpandableBox({
+    required String title,
+    required double valor,
+    required List<GastoModel> gastos,
+    required bool expanded,
+    required VoidCallback onToggle,
+    required NumberFormat formatter,
+    required double maxHeight,
+  }) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      constraints: BoxConstraints(
+        minHeight: 100,
+        maxHeight: expanded ? maxHeight : 100,
+      ),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
+              Row(
+                children: [
+                  Text(
+                    formatter.format(valor),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      expanded ? Icons.expand_less : Icons.expand_more,
+                    ),
+                    onPressed: onToggle,
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: gastos.length,
+              itemBuilder: (context, index) {
+                final g = gastos[index];
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(g.descricao),
+                    Text(formatter.format(g.valor)),
+                  ],
+                );
+              },
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildResumoComLista({
-    required String label,
-    required String valor,
-    required List gastos,
-    required NumberFormat formatter,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  Widget _buildFABMenu(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8, bottom: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (isMenuOpen) ...[
+            _menuItem(
+              Icons.add,
+              'Novo registro',
+              () => Navigator.pushNamed(context, AppRoutes.newEntry),
             ),
-            Row(
-              children: [
-                Text(
-                  valor,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Icon(Icons.remove_circle_outline, size: 18),
-              ],
-            ),
+            const SizedBox(height: 8),
+            _menuItem(Icons.insert_chart, 'Relatórios', () {
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Abrir relatórios')));
+            }),
+            const SizedBox(height: 8),
+            _menuItem(Icons.settings, 'Configurações', () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Abrir configurações')),
+              );
+            }),
+            const SizedBox(height: 16),
           ],
-        ),
-        const SizedBox(height: 8),
-        ...gastos.map<Widget>((g) {
-          return Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [Text(g.descricao), Text(formatter.format(g.valor))],
-          );
-        }).toList(),
-      ],
+          FloatingActionButton(
+            onPressed: () => setState(() => isMenuOpen = !isMenuOpen),
+            backgroundColor: Colors.grey.shade300,
+            child: Icon(
+              isMenuOpen ? Icons.close : Icons.add,
+              color: Colors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

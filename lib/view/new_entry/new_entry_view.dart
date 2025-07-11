@@ -27,6 +27,7 @@ class _NewEntryViewState extends State<NewEntryView> {
   Key _dropdownCartaoKey = UniqueKey();
 
   late SettingsModel _settings;
+  bool _carregando = true;
   final _settingsService = SettingsService();
 
   @override
@@ -36,11 +37,13 @@ class _NewEntryViewState extends State<NewEntryView> {
   }
 
   Future<void> _carregarPreferencias() async {
-    final dados = await _settingsService.carregarOuCriarPadrao();
-    setState(() {
-      _settings = dados;
-    });
-  }
+  final dados = await _settingsService.carregarOuCriarPadrao();
+  setState(() {
+    _settings = dados;
+    _carregando = false;
+  });
+}
+
 
   @override
   void dispose() {
@@ -318,6 +321,11 @@ class _NewEntryViewState extends State<NewEntryView> {
 
   @override
   Widget build(BuildContext context) {
+    if (_carregando) {
+    return const Scaffold(
+      body: Center(child: CircularProgressIndicator()),
+    );
+  }
     final formatter = DateFormat('dd/MM/yyyy');
 
     return Scaffold(
