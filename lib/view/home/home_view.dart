@@ -22,14 +22,12 @@ class _HomeViewState extends State<HomeView> {
     final viewModel = Provider.of<GastoViewModel>(context);
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-    final receitas =
-        viewModel.gastos
-            .where((g) => g.tipo == TipoLancamento.receita)
-            .toList();
-    final despesas =
-        viewModel.gastos
-            .where((g) => g.tipo == TipoLancamento.despesa)
-            .toList();
+    final receitas = viewModel.gastos
+        .where((g) => g.tipo == TipoLancamento.receita)
+        .toList();
+    final despesas = viewModel.gastos
+        .where((g) => g.tipo == TipoLancamento.despesa)
+        .toList();
 
     final totalReceitas = receitas.fold(0.0, (sum, g) => sum + g.valor);
     final totalDespesas = despesas.fold(0.0, (sum, g) => sum + g.valor);
@@ -38,68 +36,70 @@ class _HomeViewState extends State<HomeView> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: null,
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(24, 48, 24, 0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.chevron_left, color: Colors.black),
-                SizedBox(width: 8),
-                Text(
-                  'Junho',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 80),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  Icon(Icons.chevron_left, color: Colors.black),
+                  SizedBox(width: 8),
+                  Text(
+                    'Junho',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Icon(Icons.chevron_right, color: Colors.black),
-              ],
-            ),
-            const SizedBox(height: 32),
+                  SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: Colors.black),
+                ],
+              ),
+              const SizedBox(height: 32),
 
-            _buildExpandableBox(
-              title: 'Total Receita',
-              valor: totalReceitas,
-              gastos: receitas,
-              expanded: expandReceitas,
-              onToggle: () => setState(() => expandReceitas = !expandReceitas),
-              formatter: formatter,
-              maxHeight: 200,
-            ),
-            const SizedBox(height: 24),
+              _buildExpandableBox(
+                title: 'Total Receitas',
+                valor: totalReceitas,
+                gastos: receitas,
+                expanded: expandReceitas,
+                onToggle: () => setState(() => expandReceitas = !expandReceitas),
+                formatter: formatter,
+                maxHeight: 130,
+              ),
+              const SizedBox(height: 24),
 
-            _buildExpandableBox(
-              title: 'Total Despesas',
-              valor: totalDespesas,
-              gastos: despesas,
-              expanded: expandDespesas,
-              onToggle: () => setState(() => expandDespesas = !expandDespesas),
-              formatter: formatter,
-              maxHeight: 300,
-            ),
-            const SizedBox(height: 24),
+              _buildExpandableBox(
+                title: 'Total Despesas',
+                valor: totalDespesas,
+                gastos: despesas,
+                expanded: expandDespesas,
+                onToggle: () => setState(() => expandDespesas = !expandDespesas),
+                formatter: formatter,
+                maxHeight: 260,
+              ),
+              const SizedBox(height: 24),
 
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Saldo',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  formatter.format(saldo),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Saldo',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
-                ),
-              ],
-            ),
-          ],
+                  Text(
+                    formatter.format(saldo),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: _buildFABMenu(context),
@@ -117,17 +117,15 @@ class _HomeViewState extends State<HomeView> {
   }) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      constraints: BoxConstraints(
-        minHeight: 100,
-        maxHeight: expanded ? maxHeight : 100,
-      ),
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Cabeçalho com toggle
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -158,22 +156,24 @@ class _HomeViewState extends State<HomeView> {
             ],
           ),
           const SizedBox(height: 8),
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.zero,
-              itemCount: gastos.length,
-              itemBuilder: (context, index) {
-                final g = gastos[index];
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(g.descricao),
-                    Text(formatter.format(g.valor)),
-                  ],
-                );
-              },
+          if (expanded)
+            SizedBox(
+              height: maxHeight - 60,
+              child: ListView.builder(
+                padding: EdgeInsets.zero,
+                itemCount: gastos.length,
+                itemBuilder: (context, index) {
+                  final g = gastos[index];
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(g.descricao),
+                      Text(formatter.format(g.valor)),
+                    ],
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
     );

@@ -11,9 +11,11 @@ class SettingsService {
     if (dados != null) return dados;
 
     final novo = SettingsModel(
-      categorias: ['Alimentação', 'Transporte', 'Lazer', 'Saúde'],
-      cartoes: ['Débito Itaú', 'Crédito Nubank', 'Pix', 'Dinheiro'],
-    );
+  categoriasDespesas: ['Alimentação', 'Transporte', 'Lazer', 'Saúde'],
+  categoriasReceitas: ['Salário', 'Freelance', 'Investimentos'],
+  cartoes: ['Débito Itaú', 'Crédito Nubank', 'Pix', 'Dinheiro'],
+);
+
 
     await box.put('prefs', novo);
     return novo;
