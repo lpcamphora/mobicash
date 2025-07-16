@@ -3,5 +3,6 @@ class AppRoutes {
   static const home = '/home';
   static const newEntry = '/new-entry';
   static const settings = '/settings';
-  static const reports = '/reports';
+  // A rota abaixo foi removida porque ReportsView exige argumento dinâmico
+  // static const reports = '/reports';
 }

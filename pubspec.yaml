@@ -8,11 +8,14 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter  # ✅ ADICIONADO
   provider: ^6.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   path_provider: ^2.0.14
-  intl: ^0.18.1
+  intl: ^0.19.0
+
   fl_chart: ^1.0.0
   flutter_multi_formatter: ^2.5.0
 

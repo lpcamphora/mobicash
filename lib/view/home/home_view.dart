@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../../model/gasto_model.dart';
 import '../../viewmodel/gasto_viewmodel.dart' show GastoViewModel;
 import '../../routes/app_routes.dart';
+import '../settings/settings_view.dart';
+import '../reports/reports_view.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -22,12 +24,14 @@ class _HomeViewState extends State<HomeView> {
     final viewModel = Provider.of<GastoViewModel>(context);
     final formatter = NumberFormat.currency(locale: 'pt_BR', symbol: 'R\$');
 
-    final receitas = viewModel.gastos
-        .where((g) => g.tipo == TipoLancamento.receita)
-        .toList();
-    final despesas = viewModel.gastos
-        .where((g) => g.tipo == TipoLancamento.despesa)
-        .toList();
+    final receitas =
+        viewModel.gastos
+            .where((g) => g.tipo == TipoLancamento.receita)
+            .toList();
+    final despesas =
+        viewModel.gastos
+            .where((g) => g.tipo == TipoLancamento.despesa)
+            .toList();
 
     final totalReceitas = receitas.fold(0.0, (sum, g) => sum + g.valor);
     final totalDespesas = despesas.fold(0.0, (sum, g) => sum + g.valor);
@@ -65,7 +69,8 @@ class _HomeViewState extends State<HomeView> {
                 valor: totalReceitas,
                 gastos: receitas,
                 expanded: expandReceitas,
-                onToggle: () => setState(() => expandReceitas = !expandReceitas),
+                onToggle:
+                    () => setState(() => expandReceitas = !expandReceitas),
                 formatter: formatter,
                 maxHeight: 130,
               ),
@@ -76,7 +81,8 @@ class _HomeViewState extends State<HomeView> {
                 valor: totalDespesas,
                 gastos: despesas,
                 expanded: expandDespesas,
-                onToggle: () => setState(() => expandDespesas = !expandDespesas),
+                onToggle:
+                    () => setState(() => expandDespesas = !expandDespesas),
                 formatter: formatter,
                 maxHeight: 260,
               ),
@@ -194,16 +200,30 @@ class _HomeViewState extends State<HomeView> {
             ),
             const SizedBox(height: 8),
             _menuItem(Icons.insert_chart, 'Relatórios', () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(const SnackBar(content: Text('Abrir relatórios')));
-            }),
-            const SizedBox(height: 8),
-            _menuItem(Icons.settings, 'Configurações', () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Abrir configurações')),
+              showDialog(
+                context: context,
+                builder:
+                    (_) => Dialog(
+                      child: SizedBox(
+                        height: 400,
+                        child: ReportsView(mesSelecionado: DateTime.now()),
+                      ),
+                    ),
               );
             }),
+
+            const SizedBox(height: 8),
+            _menuItem(Icons.settings, 'Configurações', () {
+              showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+                builder: (_) => const SettingsView(),
+              );
+            }),
+
             const SizedBox(height: 16),
           ],
           FloatingActionButton(
